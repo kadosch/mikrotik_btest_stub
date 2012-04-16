@@ -1,0 +1,10 @@
+Usage: Mikrotik_BandwidthTest.py [options] HOST
+
+Options:
+  -h, --help            show this help message and exit
+  -p PORT, --port=PORT
+  -t DURATION, --time=DURATION
+                        test duration in seconds
+  -m MTU, --mtu=MTU
+  -d DIRECTION, --direction=DIRECTION
+                        test direction: receive, send, both
