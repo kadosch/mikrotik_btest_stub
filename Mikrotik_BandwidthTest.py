@@ -3,6 +3,12 @@ from TcpTest import TcpTest
 from time import sleep
 import socket
 import messages
+import hashlib
+
+def md5(content):
+    m = hashlib.md5()
+    m.update(content)
+    return m.digest()
 
 def main():
     usage = "usage: %prog [options] HOST"
@@ -17,6 +23,10 @@ def main():
     parser.add_option("-d", "--direction",
         action="store", dest="direction", default="receive",
         help="test direction: receive, send, both")
+    parser.add_option("-u", "--user",
+        action="store", dest="user", default="")
+    parser.add_option("-a", "--password",
+        action="store", dest="password", default="")
 
     options, args = parser.parse_args()
     if len(args) != 1:
@@ -27,6 +37,8 @@ def main():
     bufsize = int(options.mtu) - 40
     duration = float(options.duration)
     direction = options.direction
+    user = options.user[:32]
+    password = options.password
     if direction in ("receive", "send"):
         directions = [direction]
     elif direction == "both":
@@ -48,9 +60,19 @@ def main():
     else:
         s.sendall(messages.TCP_BOTH)
 
-    if s.recv(bufsize) != messages.OK:
-        s.close()
-        exit()
+    data = s.recv(bufsize)
+
+    if data != messages.OK:
+        if len(data) != 20 or data[:4] != '\x02\x00\x00\x00':
+            s.close()
+            exit()
+        challenge = data[4:]
+        response = md5(password+md5(password+challenge)) + user + ('\x00' * (32-len(user)))
+        s.sendall(response)
+        data2 = s.recv(bufsize)
+        if  data2 != messages.OK:
+            s.close()
+            exit(1)
 
     thread_list = list()
     for d in directions:
@@ -63,20 +85,14 @@ def main():
     for th in thread_list:
         th.stop = True
 
-    rx_mbps = 0.0
-    tx_mbps = 0.0
     for th in thread_list:
         th.join()
         if th.direction == "receive":
-            rx_mbps += th.mbps
+            print "Rx: ", round(th.mbps, 2),"Mb/s"
         else:
-            tx_mbps += th.mbps
+            print "Tx: ", round(th.mbps, 2),"Mb/s"
     s.close()
 
-    if direction in ("receive","both"):
-        print "Rx: ", round(rx_mbps, 2),"Mb/s"
-    if direction in ("send", "both"):
-        print "Tx: ", round(tx_mbps, 2),"Mb/s"
 
 if __name__ == "__main__":
     main()

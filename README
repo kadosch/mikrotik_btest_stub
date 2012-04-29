@@ -1,10 +1,14 @@
+This is a stub of a Mikrotik TCP bwtest client.
+
 Usage: Mikrotik_BandwidthTest.py [options] HOST
 
 Options:
   -h, --help            show this help message and exit
-  -p PORT, --port=PORT
+  -p PORT, --port=PORT  
   -t DURATION, --time=DURATION
                         test duration in seconds
-  -m MTU, --mtu=MTU
+  -m MTU, --mtu=MTU     
   -d DIRECTION, --direction=DIRECTION
                         test direction: receive, send, both
+  -u USER, --user=USER  
+  -a PASSWORD, --password=PASSWORD
